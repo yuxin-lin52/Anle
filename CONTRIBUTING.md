@@ -18,7 +18,26 @@ Language and syntax proposals. The syntax is not frozen, so accepting a proposal
 
 Open an issue describing the change. Pure fixes — a typo, an example that does not run — can go straight to a pull request. Anything that changes compiler behavior needs agreement first, otherwise the work may be turned down after it is written.
 
-## Building
+## What a pull request can change
+
+A pull request may touch `compiler/`, `demos/` and `docs/`. A check enforces this, and it is required before a merge: a pull request that changes anything else stays blocked.
+
+Workflow files, the licence, this document, the READMEs and the repository metadata are changed by the maintainer only. The one exception is an automated dependency update, which may also touch workflow files.
+
+## Who can do what
+
+Having a change merged makes you a **contributor** in the sense GitHub counts contributions: your commits appear in the repository's history. It grants no permissions, and it is not an invitation to collaborate.
+
+| Role | How it is granted | What it allows |
+|---|---|---|
+| Reader | automatic, for any public repository | read, open issues, open pull requests from a fork |
+| Contributor | automatic, once a commit is in the history | nothing beyond the above; a statistic |
+| Collaborator | invited by the maintainer | write access, at a level the maintainer picks |
+| Maintainer | the repository owner | merge, change settings |
+
+Merging a pull request changes exactly one thing for its author: their later pull requests no longer wait for a maintainer to start the checks. Their permissions do not change. Pull requests are merged by the maintainer, and a pull request author cannot approve their own.
+
+
 
 See the Building section of the README:
 
