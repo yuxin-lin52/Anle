@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["crates/anle-error", "crates/anle-lexer", "crates/anle-parser", "crates/anle-types", "crates/anle-check", "crates/anle-ir", "crates/anle-codegen", "crates/anle-llvm", "crates/anlec"]
+
+[workspace.package]
+edition = "2021"
+version = "0.2.0"

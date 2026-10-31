@@ -1,0 +1,22 @@
+[package]
+name = "anlec"
+version.workspace = true
+edition.workspace = true
+
+[features]
+# 缺省 = 完整编译器（前端 + 两个后端）
+default = ["backend", "llvm"]
+# 代码生成（C 后端）；关掉则只到检查层
+backend = ["dep:anle-ir", "dep:anle-codegen"]
+# LLVM 后端；关掉则不需要 LLVM-C.dll
+llvm = ["dep:anle-llvm", "backend"]
+
+[dependencies]
+anle-error = { path = "../anle-error" }
+anle-lexer = { path = "../anle-lexer" }
+anle-parser = { path = "../anle-parser" }
+anle-check = { path = "../anle-check" }
+anle-ir = { path = "../anle-ir", optional = true }
+anle-codegen = { path = "../anle-codegen", optional = true }
+anle-llvm = { path = "../anle-llvm", optional = true }
+serde_json = "1"

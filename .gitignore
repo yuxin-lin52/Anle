@@ -1,0 +1,9 @@
+# 构建产物
+build/
+target/
+*.exe
+*.pdb
+*.ilk
+*.o
+*.obj
+*.c.tmp

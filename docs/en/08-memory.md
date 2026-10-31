@@ -1,4 +1,4 @@
-# 05 Memory: the region tree
+# 08 Memory: the region tree
 
 Status: implemented.
 

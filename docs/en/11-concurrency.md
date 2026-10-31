@@ -1,4 +1,4 @@
-# 09 Concurrency: static watermark ordering
+# 11 Concurrency: static watermark ordering
 
 Status: semantics reserved (the design is locked so other designs do not collide with it; the implementation is scheduled separately).
 
