@@ -21,7 +21,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  c-backend:
+    name: C backend on Windows
     runs-on: windows-latest
     timeout-minutes: 25
     steps:
@@ -46,9 +47,12 @@ jobs:
           $clang = Get-Command clang.exe -ErrorAction SilentlyContinue
           if (-not $clang) { throw "clang was not found on PATH" }
           $env:ANLE_CC = $clang.Source
+          $anlec = Join-Path $env:GITHUB_WORKSPACE "compiler/target/release/anlec.exe"
           Push-Location demos/en/physics-engine
-          & ../../compiler/target/release/anlec.exe build physics-engine
+          & $anlec build physics-engine
+          $code = $LASTEXITCODE
           Pop-Location
+          if ($code -ne 0) { throw "the compiler exited with $code" }
 
       - name: Run the demo and compare with the recorded output
         shell: pwsh
@@ -60,3 +64,39 @@ jobs:
           if (-not ($out -match "collisions: 7343")) {
             throw "the output does not match the five lines recorded in the README"
           }
+
+  both-backends:
+    name: C and LLVM backends agree
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install LLVM 18
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-18 llvm-18-dev clang-18 libpolly-18-dev
+          llvm-config-18 --version
+
+      - name: Build the compiler with both backends
+        working-directory: compiler
+        env:
+          LLVM_SYS_181_PREFIX: /usr/lib/llvm-18
+        run: cargo build --release -p anlec
+
+      - name: Compile through each backend and compare
+        run: |
+          set -e
+          exe="$PWD/compiler/target/release/anlec"
+          cd demos/en/physics-engine
+          export ANLE_CC="$(command -v clang-18)"
+          for backend in c llvm; do
+            "$exe" build physics-engine --backend "$backend"
+            "./build/debug/physics-engine" > "out-$backend.txt"
+            echo "--- $backend ---"
+            cat "out-$backend.txt"
+          done
+          diff out-c.txt out-llvm.txt
+          grep -q "collisions: 7343" out-c.txt
+          echo "both backends produce identical output"
