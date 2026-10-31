@@ -2,6 +2,8 @@
 
 <h1 align="center">Anle</h1>
 
+<p align="center"><a href="https://github.com/yuxin-lin52/Anle/actions/workflows/build.yml"><img src="https://github.com/yuxin-lin52/Anle/actions/workflows/build.yml/badge.svg" alt="build"></a></p>
+
 <p align="center"><a href="README.zh-CN.md">中文</a> | English</p>
 
 Anle is an ahead-of-time compiled language. Memory is managed by the compiler: reclamation points are computed from the program's block structure, and the runtime has no garbage collector, no pauses, and no per-object counting.
