@@ -21,8 +21,34 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  gate:
+    name: Account age gate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - name: Check the age of the pull request author
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOGIN: ${{ github.event.pull_request.user.login }}
+        run: |
+          created=$(gh api "users/$LOGIN" --jq .created_at)
+          age=$(( ( $(date +%s) - $(date -d "$created" +%s) ) / 86400 ))
+          echo "$LOGIN registered on $created, $age days ago"
+          if [ "$age" -lt 365 ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::The author account is younger than 365 days, so the check does not run on its own. A maintainer can start it by hand."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   c-backend:
     name: C backend on Windows
+    needs: gate
+    if: github.event_name != 'pull_request' || needs.gate.outputs.run == 'true'
     runs-on: windows-latest
     timeout-minutes: 25
     steps:
@@ -67,6 +93,8 @@ jobs:
 
   both-backends:
     name: C and LLVM backends agree
+    needs: gate
+    if: github.event_name != 'pull_request' || needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
