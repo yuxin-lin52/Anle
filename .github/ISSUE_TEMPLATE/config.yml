@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Design discussion
+    url: https://github.com/yuxin-lin52/Anle/discussions
+    about: Questions about the language design, trade-offs, or whether something is intentional belong in Discussions rather than the issue tracker.
