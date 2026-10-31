@@ -2,7 +2,7 @@
 
 <h1 align="center">Anle</h1>
 
-<p align="center">[English](README.md) | 中文</p>
+<p align="center"><a href="README.md">English</a> | 中文</p>
 
 Anle 是一门 AOT 编译语言。内存由编译器管理：回收点从程序的块结构算出，运行时没有垃圾回收器、没有停顿、没有逐对象计数。
 
