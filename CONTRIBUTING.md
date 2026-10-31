@@ -12,7 +12,7 @@ Thanks for your interest. Anle is early: the syntax is not frozen and the langua
 
 ## What is not accepted
 
-Language and syntax proposals. The syntax is not frozen, so accepting a proposal would commit the project to an interface that may later be removed. Zig takes the same position: language proposals are not accepted.
+Language and syntax proposals. The syntax is not frozen, so accepting a proposal would commit the project to an interface that may later be removed.
 
 ## Before you open a pull request
 
@@ -45,7 +45,7 @@ The line states that you wrote the change, or have the right to submit it, and t
 
 ## Use of AI assistants
 
-AI assistance is allowed, with disclosure. The policy follows Rust's:
+AI assistance is allowed, with disclosure. The rules follow Rust's discipline:
 
 - Using an assistant to answer questions, analyze, review, or refine is fine, and needs no disclosure.
 - A change whose code was **created** by a model is accepted when it is non-critical, well tested, and you can explain every line. Say so in the pull request.
