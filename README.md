@@ -47,6 +47,10 @@ This prints `5050`. The rules visible in this example:
 
 The model gives every programmer the same simple default: put the code in blocks, and memory takes care of itself — a beginner can write an entire program in one block with zero memory burden. The block layout never affects correctness, only memory footprint. For memory- or performance-sensitive projects, advanced developers can tune it: one step per block, plus `kill` inside `unsafe`, to keep the memory peak low.
 
+## Download
+
+A prebuilt Windows x64 binary of the C backend is attached to the [latest release](https://github.com/yuxin-lin52/Anle/releases). It still needs a C toolchain: `clang` on `PATH`, or `ANLE_CC` pointing at one. The LLVM backend is not included in the prebuilt binary — build from source for that (see below).
+
 ## Building
 
 The compiler source is in [`compiler/`](compiler) — a Rust workspace of nine crates.
