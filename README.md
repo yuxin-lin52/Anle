@@ -72,11 +72,11 @@ The C backend lowers the intermediate representation to C source text and hands 
 ## Implementation status
 
 * The compiler is implemented in Rust; the source is included in this repository. Self-hosting is in an early stage: the lexer of the self-hosted front end is complete and passes token-for-token comparison against the host implementation.
-* Two backends are implemented, **C** and **LLVM**; both are compiled through clang, and the same source compiled through both backends produces byte-identical program output. LLVM is planned to become the primary backend.
-* Performance is currently about 4x behind an equivalent C program. The causes are identified — per-statement source-position bookkeeping and handle indirection — and fixes are planned.
+* Two backends are implemented, **C** and **LLVM**; both are compiled through clang, and the same source compiled through both backends produces byte-identical program output.
+* Generated code is slower than a hand-written C program. The measured costs are per-statement source-position bookkeeping and handle indirection.
 * Known gaps: parameter parsing for generic functions is incomplete; some diagnostic wording does not match the actual cause.
 * The syntax is **not frozen**. Breaking changes are expected; anything written against this language will need updating.
-* The standard library is currently limited to about 40 builtin functions; an upper layer written in Anle is planned.
+* The standard library consists of about 40 builtin functions.
 
 ## Verification
 
