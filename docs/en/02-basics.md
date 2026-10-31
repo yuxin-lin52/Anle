@@ -8,6 +8,8 @@ All code lives in blocks. A block opens with `#: name b` (born) and closes with 
 
 At run time, blocks chain: every block nobody references is a chain root, and all chains run top-to-bottom in source order; referenced blocks run where they are called. Mutually-calling blocks with no root are rejected at compile time.
 
+Indentation is decorative. Anle is not sensitive to it — a block is delimited by `:` and the `;` that closes it on a line of its own, not by leading whitespace. Every example in this documentation is still indented, because that makes block boundaries easier to scan. The editor extension for Anle ships an auto-formatter that keeps it consistent.
+
 ## Creation and re-binding
 
 Names are created with `add`, exactly once: `add val "name" = value`, `add fn "name" (params) ret = body`, `add type "name" = definition`. Re-binding never uses `add` — it is `val "name" = new-value`. Assigning to an uncreated name is a compile error; there is no "first assignment creates the variable".

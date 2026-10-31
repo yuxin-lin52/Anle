@@ -36,7 +36,7 @@ This prints `5050`. The rules visible in this example:
 * No implicit conversions. `int` and `float` do not mix without an explicit cast.
 * Conditions must be booleans — `if 5:` is a compile error.
 * Indices start at 1, matching the inclusive range operator (`for i in 1\~5` covers 1 through 5).
-* Control-flow bodies are terminated by a lone `;` on its own line. Indentation is purely cosmetic and can never change meaning; a mismatched `;` is a loud parse error.
+* Control-flow bodies are terminated by a lone `;` on its own line. Indentation is purely cosmetic and can never change meaning; a mismatched `;` is a loud parse error. The Anle editor extension ships an auto-formatter that keeps indentation consistent.
 
 ## Memory model
 
