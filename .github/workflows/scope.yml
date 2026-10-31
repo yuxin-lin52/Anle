@@ -1,0 +1,37 @@
+name: scope
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  changed-files:
+    name: Only source files change
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Reject changes outside the allowed paths
+        run: |
+          set -eu
+          git fetch --depth=1 origin "${{ github.base_ref }}"
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          echo "changed files:"
+          echo "$changed"
+
+          allowed='^(compiler/|demos/|docs/)'
+          outside=$(echo "$changed" | grep -vE "$allowed" || true)
+
+          if [ -n "$outside" ]; then
+            echo "::error::A pull request may only change compiler/, demos/ or docs/. These paths are outside that:"
+            echo "$outside" | sed 's/^/  - /'
+            echo "Workflow files, licence, and repository metadata are changed by the maintainer only."
+            exit 1
+          fi
+          echo "every changed file is inside compiler/, demos/ or docs/"
