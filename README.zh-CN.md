@@ -61,7 +61,7 @@ cargo build --release --no-default-features --features backend   # 仅 C 后端�
 cargo build --release                                            # 两条后端，需要 LLVM 18.1
 ```
 
-C 后端把中间表示翻成 C 源码文本，交给 `clang`（路径取 `ANLE_CC`，未设则用 `PATH` 里的 `clang`）。LLVM 后端链 `LLVM-C.dll`，故 `LLVM_SYS_181_PREFIX` 需指向 LLVM 18.1 安装目录。
+C 后端把中间表示翻成 C 源码文本，交给 `clang`（路径取 `ANLE_CC`，未设则用 `PATH` 里的 `clang`）。LLVM 后端链 `LLVM-C.dll`，故 `LLVM_SYS_181_PREFIX` 需指向 LLVM 18.1 安装目录。本仓库不随附 LLVM，请从上游发布页获取：<https://github.com/llvm/llvm-project/releases>。
 
 ```
 ./target/release/anlec build demos/zh/物理引擎/物理引擎

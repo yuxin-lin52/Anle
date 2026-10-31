@@ -61,7 +61,7 @@ cargo build --release --no-default-features --features backend   # C backend onl
 cargo build --release                                            # both backends, needs LLVM 18.1
 ```
 
-The C backend lowers the intermediate representation to C source text and hands it to `clang` (path from `ANLE_CC`, otherwise `clang` on `PATH`). The LLVM backend links against `LLVM-C.dll`, so `LLVM_SYS_181_PREFIX` must point at an LLVM 18.1 installation.
+The C backend lowers the intermediate representation to C source text and hands it to `clang` (path from `ANLE_CC`, otherwise `clang` on `PATH`). The LLVM backend links against `LLVM-C.dll`, so `LLVM_SYS_181_PREFIX` must point at an LLVM 18.1 installation. LLVM is not redistributed here — get it from the upstream release page: <https://github.com/llvm/llvm-project/releases>.
 
 ```
 ./target/release/anlec build demos/en/physics-engine/physics-engine
