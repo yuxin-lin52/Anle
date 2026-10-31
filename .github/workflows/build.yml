@@ -1,0 +1,62 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "compiler/**"
+      - "demos/**"
+      - ".github/workflows/build.yml"
+  pull_request:
+    paths:
+      - "compiler/**"
+      - "demos/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show the toolchain
+        shell: pwsh
+        run: |
+          cargo --version
+          rustc --version
+          clang --version
+
+      - name: Build the compiler, C backend only
+        working-directory: compiler
+        shell: pwsh
+        run: cargo build --release --no-default-features --features backend
+
+      - name: Compile the demo
+        shell: pwsh
+        run: |
+          $clang = Get-Command clang.exe -ErrorAction SilentlyContinue
+          if (-not $clang) { throw "clang was not found on PATH" }
+          $env:ANLE_CC = $clang.Source
+          Push-Location demos/en/physics-engine
+          & ../../compiler/target/release/anlec.exe build physics-engine
+          Pop-Location
+
+      - name: Run the demo and compare with the recorded output
+        shell: pwsh
+        run: |
+          $exe = "demos/en/physics-engine/build/debug/physics-engine.exe"
+          $out = & $exe
+          $out | ForEach-Object { Write-Host $_ }
+          if ($LASTEXITCODE -ne 0) { throw "the demo exited with $LASTEXITCODE" }
+          if (-not ($out -match "collisions: 7343")) {
+            throw "the output does not match the five lines recorded in the README"
+          }
