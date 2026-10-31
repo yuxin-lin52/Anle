@@ -26,6 +26,10 @@ jobs:
           echo "$changed"
 
           allowed='^(compiler/|demos/|docs/)'
+          if [ "${{ github.event.pull_request.user.login }}" = "dependabot[bot]" ]; then
+            allowed='^(compiler/|demos/|docs/|\.github/)'
+            echo "dependency updates may also change workflow files"
+          fi
           outside=$(echo "$changed" | grep -vE "$allowed" || true)
 
           if [ -n "$outside" ]; then
