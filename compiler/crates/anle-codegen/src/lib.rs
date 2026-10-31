@@ -78,7 +78,7 @@ const ANLE_LIST_RT: &str = r#"const char* anle_str_copy(const char* s);
 
 \
 
-     typedef struct { long long len; long long cap; long long esz; long long sgn; char* d; } AnleList;
+     typedef struct { long long len; long long cap; long long esz; long long sgn; char* d; AnleRegion* home; } AnleList;
 \
      static long long anle_f2s(double d) { long long v; memcpy(&v, &d, 8); return v; }
      static double anle_s2f(long long v) { double d; memcpy(&d, &v, 8); return d; }
@@ -93,7 +93,7 @@ const ANLE_LIST_RT: &str = r#"const char* anle_str_copy(const char* s);
      void anle_slot_put(char* p, long long esz, long long v) { memcpy(p, &v, (size_t)esz); }
 \
      AnleList* anle_list_new(long long esz, long long sgn) {
-  AnleList* l = (AnleList*)anle_region_alloc(anle_region_cur, (long long)sizeof(AnleList));
+  AnleList* l = (AnleList*)anle_region_alloc(anle_region_cur, (long long)sizeof(AnleList)); l->home = anle_region_cur;
   l->len = 0; l->cap = 4; l->esz = esz; l->sgn = sgn;
   l->d = (char*)anle_region_alloc(anle_region_cur, (long long)(esz * 4));
   if (!l || !l->d) { anle_die_nc(6, "内存不够——程序申请的空间超出可用内存", "缩小数据量，或换更省内存的写法"); }
@@ -107,7 +107,7 @@ const ANLE_LIST_RT: &str = r#"const char* anle_str_copy(const char* s);
   AnleRegion* t = anle_region_cur ? anle_region_cur->parent : 0;
   if (!t) t = anle_region_cur;
   AnleList* n = (AnleList*)anle_region_alloc(t, (long long)sizeof(AnleList));
-  n->len = h->len; n->cap = h->cap; n->esz = h->esz; n->sgn = h->sgn;
+  n->len = h->len; n->cap = h->cap; n->esz = h->esz; n->sgn = h->sgn; n->home = t;
   n->d = (char*)anle_region_alloc(t, (long long)(h->esz * (h->cap > 0 ? h->cap : 1)));
   if (h->len > 0) memcpy(n->d, h->d, (size_t)(h->esz * h->len));
   return n;
@@ -128,7 +128,7 @@ const ANLE_LIST_RT: &str = r#"const char* anle_str_copy(const char* s);
 }
 
      void anle_list_push_from(AnleList* l, const char* src) {
-  if (l->len >= l->cap) { long long ncap = l->cap * 2; char* nd = (char*)anle_region_alloc(anle_region_cur, (long long)(l->esz * ncap)); if (l->d && l->len > 0) memcpy(nd, l->d, (size_t)(l->esz * l->len)); l->cap = ncap; l->d = nd; }
+  if (l->len >= l->cap) { long long ncap = l->cap * 2; char* nd = (char*)anle_region_alloc(l->home ? l->home : anle_region_cur, (long long)(l->esz * ncap)); if (l->d && l->len > 0) memcpy(nd, l->d, (size_t)(l->esz * l->len)); l->cap = ncap; l->d = nd; }
   memcpy(anle_list_slot(l, l->len), src, (size_t)l->esz);
   l->len = l->len + 1;
 }
@@ -158,7 +158,7 @@ const ANLE_LIST_RT: &str = r#"const char* anle_str_copy(const char* s);
 }
 \
      long long anle_list_push(AnleList* l, long long v) {
-  if (l->len >= l->cap) { long long ncap = l->cap * 2; char* nd = (char*)anle_region_alloc(anle_region_cur, (long long)(l->esz * ncap)); if (l->d && l->len > 0) memcpy(nd, l->d, (size_t)(l->esz * l->len)); l->cap = ncap; l->d = nd; }
+  if (l->len >= l->cap) { long long ncap = l->cap * 2; char* nd = (char*)anle_region_alloc(l->home ? l->home : anle_region_cur, (long long)(l->esz * ncap)); if (l->d && l->len > 0) memcpy(nd, l->d, (size_t)(l->esz * l->len)); l->cap = ncap; l->d = nd; }
   anle_slot_put(anle_list_slot(l, l->len), l->esz, v);
   l->len = l->len + 1;
   return l->len;
@@ -487,10 +487,10 @@ static const char* anle_str_iter_next(const char* s, long long n) {
 // nt: 键槽longlong
 const ANLE_MAP_RT: &str = r#"const char* anle_str_copy(const char* s);
 \
-     typedef struct { long long len; long long cap; long long esz; long long sgn; long long kty; long long* k; char* v; } AnleMap;
+     typedef struct { long long len; long long cap; long long esz; long long sgn; long long kty; long long* k; char* v; AnleRegion* home; } AnleMap;
 \
      AnleMap* anle_map_new(long long esz, long long sgn, long long kty) {
-  AnleMap* m = (AnleMap*)anle_region_alloc(anle_region_cur, (long long)sizeof(AnleMap));
+  AnleMap* m = (AnleMap*)anle_region_alloc(anle_region_cur, (long long)sizeof(AnleMap)); m->home = anle_region_cur;
   m->len = 0; m->cap = 4; m->esz = esz; m->sgn = sgn; m->kty = kty;
   m->k = (long long*)anle_region_alloc(anle_region_cur, (long long)(sizeof(long long) * 4));
   m->v = (char*)anle_region_alloc(anle_region_cur, (long long)(esz * 4));
@@ -534,7 +534,7 @@ const ANLE_MAP_RT: &str = r#"const char* anle_str_copy(const char* s);
      void anle_map_put(AnleMap* m, long long k, long long v) {
   long long i = anle_map_find(m, k);
   if (i >= 0) { anle_slot_put(m->v + i * m->esz, m->esz, v); return; }
-  if (m->len >= m->cap) { long long ncap = m->cap * 2; long long* nk = (long long*)anle_region_alloc(anle_region_cur, (long long)(sizeof(long long) * ncap)); char* nv = (char*)anle_region_alloc(anle_region_cur, (long long)(m->esz * ncap)); if (m->k && m->len > 0) { memcpy(nk, m->k, sizeof(long long) * (size_t)m->len); memcpy(nv, m->v, (size_t)(m->esz * m->len)); } m->cap = ncap; m->k = nk; m->v = nv; }
+  if (m->len >= m->cap) { long long ncap = m->cap * 2; long long* nk = (long long*)anle_region_alloc(m->home ? m->home : anle_region_cur, (long long)(sizeof(long long) * ncap)); char* nv = (char*)anle_region_alloc(m->home ? m->home : anle_region_cur, (long long)(m->esz * ncap)); if (m->k && m->len > 0) { memcpy(nk, m->k, sizeof(long long) * (size_t)m->len); memcpy(nv, m->v, (size_t)(m->esz * m->len)); } m->cap = ncap; m->k = nk; m->v = nv; }
   m->k[m->len] = (m->kty == 0) ? (long long)(size_t)anle_str_copy((const char*)(size_t)k) : k;
   anle_slot_put(m->v + m->len * m->esz, m->esz, v);
   m->len = m->len + 1;
