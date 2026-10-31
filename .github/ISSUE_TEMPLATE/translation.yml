@@ -1,0 +1,33 @@
+name: Wiki language request
+description: Ask for the wiki to be maintained in another language
+title: "[wiki] language request: "
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The wiki is maintained as separate editions rather than as one translated page.
+        Say which language you would read, and whether you can help write it.
+        中文填写同样欢迎。
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      description: The language you would like the wiki to be written in
+      placeholder: e.g. Japanese, Spanish, German
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Who would read it
+      description: A sentence or two on the audience. A request backed by a real group of readers carries more weight than a list of languages.
+    validations:
+      required: false
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help
+      options:
+        - label: I can write or review pages in this language
+        - label: I can review a machine translation for accuracy
