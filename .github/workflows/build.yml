@@ -38,7 +38,7 @@ jobs:
       - name: Build the compiler, C backend only
         working-directory: compiler
         shell: pwsh
-        run: cargo build --release --no-default-features --features backend
+        run: cargo build --release -p anlec --no-default-features --features backend
 
       - name: Compile the demo
         shell: pwsh

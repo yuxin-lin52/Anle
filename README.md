@@ -59,8 +59,8 @@ The compiler source is in [`compiler/`](compiler) — a Rust workspace of nine c
 
 ```
 cd compiler
-cargo build --release --no-default-features --features backend   # C backend only, no LLVM needed
-cargo build --release                                            # both backends, needs LLVM 18.1
+cargo build --release -p anlec --no-default-features --features backend   # C backend only, no LLVM needed
+cargo build --release -p anlec                                   # both backends, needs LLVM 18.1
 ```
 
 The C backend lowers the intermediate representation to C source text and hands it to `clang` (path from `ANLE_CC`, otherwise `clang` on `PATH`). The LLVM backend links against `LLVM-C.dll`, so `LLVM_SYS_181_PREFIX` must point at an LLVM 18.1 installation. LLVM is not redistributed here — get it from the upstream release page: <https://github.com/llvm/llvm-project/releases>.
