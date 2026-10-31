@@ -1,0 +1,252 @@
+#: 主块 b
+add type "粒子" = (x float, y float, vx float, vy float)
+add val "表" list(粒子*) = []
+add val "碰次" int = 0
+
+//nt: 场地半宽
+add val "场" float = 50.0
+//nt: 粒子半径
+add val "半" float = 0.5
+
+//nt: 造粒入库
+add fn "造粒"(x float, y float, vx float, vy float) 粒子*:
+    add val "gp" 粒子* = 粒子(call val "x", call val "y", call val "vx", call val "vy")
+    push(call val "表", call val "gp")
+    give call val "gp"
+;
+
+//nt: 积分一步
+//nt: 墙反弹取负速度
+add fn "步进"(步 float) int:
+    add val "spp" 粒子* = 粒子(0.0, 0.0, 0.0, 0.0)
+    add val "spi" int = 1
+    while call val "spi" <= len(call val "表"):
+        val "spp" = call val "表"[call val "spi"]
+        val "spp".x = call val "spp".x + call val "spp".vx * call val "步"
+        val "spp".y = call val "spp".y + call val "spp".vy * call val "步"
+        if call val "spp".x > call val "场":
+            val "spp".x = call val "场" - call val "半"
+            val "spp".vx = 0 - call val "spp".vx
+        ;
+        if call val "spp".x < 0 - call val "场":
+            val "spp".x = 0 - call val "场" + call val "半"
+            val "spp".vx = 0 - call val "spp".vx
+        ;
+        if call val "spp".y > call val "场":
+            val "spp".y = call val "场" - call val "半"
+            val "spp".vy = 0 - call val "spp".vy
+        ;
+        if call val "spp".y < 0 - call val "场":
+            val "spp".y = 0 - call val "场" + call val "半"
+            val "spp".vy = 0 - call val "spp".vy
+        ;
+        val "spi" = call val "spi" + 1
+    ;
+    give 0
+;
+
+//nt: 全对 AABB 检查
+//nt: 逼近才交换（等质量弹性）
+add fn "碰撞"() int:
+    add val "ci" int = 1
+    add val "cj" int = 1
+    add val "ca" 粒子* = 粒子(0.0, 0.0, 0.0, 0.0)
+    add val "cb" 粒子* = 粒子(0.0, 0.0, 0.0, 0.0)
+    add val "cdx" float = 0.0
+    add val "cdy" float = 0.0
+    add val "ct" float = 0.0
+    while call val "ci" <= len(call val "表"):
+        val "ca" = call val "表"[call val "ci"]
+        val "cj" = call val "ci" + 1
+        while call val "cj" <= len(call val "表"):
+            val "cb" = call val "表"[call val "cj"]
+            val "cdx" = call val "ca".x - call val "cb".x
+            val "cdy" = call val "ca".y - call val "cb".y
+            if call val "cdx" < call val "半" + call val "半":
+                if call val "cdx" > 0 - call val "半" - call val "半":
+                    if call val "cdy" < call val "半" + call val "半":
+                        if call val "cdy" > 0 - call val "半" - call val "半":
+                            if call val "cdx" < 0.0:
+                                if call val "ca".vx > call val "cb".vx:
+                                    val "ct" = call val "ca".vx
+                                    val "ca".vx = call val "cb".vx
+                                    val "cb".vx = call val "ct"
+                                    val "碰次" = call val "碰次" + 1
+                                ;
+                            ;
+                            if call val "cdx" > 0.0:
+                                if call val "ca".vx < call val "cb".vx:
+                                    val "ct" = call val "ca".vx
+                                    val "ca".vx = call val "cb".vx
+                                    val "cb".vx = call val "ct"
+                                    val "碰次" = call val "碰次" + 1
+                                ;
+                            ;
+                        ;
+                    ;
+                ;
+            ;
+            val "cj" = call val "cj" + 1
+        ;
+        val "ci" = call val "ci" + 1
+    ;
+    give 0
+;
+
+//nt: 求总 vx 动量
+add fn "总vx"() float:
+    add val "vh" float = 0.0
+    add val "vi" int = 1
+    add val "vp" 粒子* = 粒子(0.0, 0.0, 0.0, 0.0)
+    while call val "vi" <= len(call val "表"):
+        val "vp" = call val "表"[call val "vi"]
+        val "vh" = call val "vh" + call val "vp".vx
+        val "vi" = call val "vi" + 1
+    ;
+    give call val "vh"
+;
+
+//nt: 界内全查
+//nt: 越界返假
+add fn "界内"() bool:
+    add val "wi" int = 1
+    add val "wp" 粒子* = 粒子(0.0, 0.0, 0.0, 0.0)
+    while call val "wi" <= len(call val "表"):
+        val "wp" = call val "表"[call val "wi"]
+        if call val "wp".x > call val "场":
+            give fa
+        ;
+        if call val "wp".x < 0 - call val "场":
+            give fa
+        ;
+        if call val "wp".y > call val "场":
+            give fa
+        ;
+        if call val "wp".y < 0 - call val "场":
+            give fa
+        ;
+        val "wi" = call val "wi" + 1
+    ;
+    give re
+;
+
+//nt: 判据一 对撞交换
+//nt: 等质量弹性换速度
+add fn "判对撞"() bool:
+    val "表" = []
+    add val "dp1" 粒子* = call fn "造粒"(10.0, 0.0, 1.0, 0.0)
+    add val "dp2" 粒子* = call fn "造粒"(11.5, 0.0, 0 - 1.0, 0.0)
+    add val "ds" int = 1
+    while call val "ds" <= 200:
+        call fn "步进"(0.01)
+        call fn "碰撞"()
+        val "ds" = call val "ds" + 1
+    ;
+    if call val "dp1".vx < 0.0:
+        if call val "dp2".vx > 0.0:
+            give re
+        ;
+    ;
+    give fa
+;
+
+//nt: 判据二 动量守恒
+add fn "判动量"() float:
+    val "表" = []
+    add val "mk" int = 0
+    add val "mv" float = 0.0
+    add val "mq" float = 0.0
+    add val "mh" float = 0.0
+    while call val "mk" < 20:
+        val "mv" = (call val "mk" % 2 == 0) ? 0.1 : 0 - 0.1
+        call fn "造粒"(3.0 + call val "mk" * 2.0, 0.0, call val "mv", 0.0)
+        val "mk" = call val "mk" + 1
+    ;
+    val "mq" = call fn "总vx"()
+    add val "ms" int = 1
+    while call val "ms" <= 1500:
+        call fn "步进"(0.01)
+        call fn "碰撞"()
+        val "ms" = call val "ms" + 1
+    ;
+    val "mh" = call fn "总vx"()
+    give call val "mh" - call val "mq"
+;
+
+//nt: 判据三 墙反弹
+add fn "判墙"() bool:
+    val "表" = []
+    add val "kp" 粒子* = call fn "造粒"(0.0, 0.0, 50.0, 0.0)
+    add val "ks" int = 1
+    while call val "ks" <= 300:
+        call fn "步进"(0.01)
+        val "ks" = call val "ks" + 1
+    ;
+    if call val "kp".vx < 0.0:
+        give re
+    ;
+    give fa
+;
+
+//nt: 基准 400 粒 400 步
+add fn "基准"() int:
+    val "表" = []
+    val "碰次" = 0
+    add val "bk" int = 0
+    add val "bx" float = 0.0
+    add val "by" float = 0.0
+    add val "bvx" float = 0.0
+    add val "bvy" float = 0.0
+    while call val "bk" < 400:
+        val "bx" = 0.0 + call val "bk" * 0.25
+        val "by" = 0.0 + call val "bk" % 20 * 5.0
+        val "bvx" = 1.0 + call val "bk" % 3 * 1.0
+        val "bvy" = 0.5 + call val "bk" % 5 * 0.25
+        call fn "造粒"(call val "bx", call val "by", call val "bvx", call val "bvy")
+        val "bk" = call val "bk" + 1
+    ;
+    add val "bs" int = 1
+    while call val "bs" <= 400:
+        call fn "步进"(0.01)
+        call fn "碰撞"()
+        val "bs" = call val "bs" + 1
+    ;
+    print("基准完成 碰次", call val "碰次")
+    give 0
+;
+
+//nt: 主流程
+add val "判1" bool = call fn "判对撞"()
+add val "判2" float = call fn "判动量"()
+add val "判3" bool = call fn "判墙"()
+add val "判4" bool = call fn "界内"()
+if call val "判1":
+    print("对撞交换 通过")
+;
+if call val "判1" == fa:
+    print("对撞交换 失败")
+;
+add val "偏" float = call val "判2"
+if call val "偏" < 0.0:
+    val "偏" = 0.0 - call val "偏"
+;
+if call val "偏" < 0.000001:
+    print("动量守恒 通过")
+;
+if call val "偏" > 0.000001:
+    print("动量守恒 失败 偏差", call val "偏")
+;
+if call val "判3":
+    print("墙反弹 通过")
+;
+if call val "判3" == fa:
+    print("墙反弹 失败")
+;
+if call val "判4":
+    print("界内约束 通过")
+;
+if call val "判4" == fa:
+    print("界内约束 失败")
+;
+call fn "基准"()
+#: 主块 d

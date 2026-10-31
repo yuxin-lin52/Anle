@@ -1,0 +1,252 @@
+#: main b
+add type "Particle" = (x float, y float, vx float, vy float)
+add val "list" list(Particle*) = []
+add val "hits" int = 0
+
+//nt: field half-width
+add val "bound" float = 50.0
+//nt: particle radius
+add val "radius" float = 0.5
+
+//nt: spawn and append
+add fn "spawn"(x float, y float, vx float, vy float) Particle*:
+    add val "gp" Particle* = Particle(call val "x", call val "y", call val "vx", call val "vy")
+    push(call val "list", call val "gp")
+    give call val "gp"
+;
+
+//nt: integrate one step
+//nt: bounce reverses velocity at walls
+add fn "step"(dt float) int:
+    add val "spp" Particle* = Particle(0.0, 0.0, 0.0, 0.0)
+    add val "spi" int = 1
+    while call val "spi" <= len(call val "list"):
+        val "spp" = call val "list"[call val "spi"]
+        val "spp".x = call val "spp".x + call val "spp".vx * call val "dt"
+        val "spp".y = call val "spp".y + call val "spp".vy * call val "dt"
+        if call val "spp".x > call val "bound":
+            val "spp".x = call val "bound" - call val "radius"
+            val "spp".vx = 0 - call val "spp".vx
+        ;
+        if call val "spp".x < 0 - call val "bound":
+            val "spp".x = 0 - call val "bound" + call val "radius"
+            val "spp".vx = 0 - call val "spp".vx
+        ;
+        if call val "spp".y > call val "bound":
+            val "spp".y = call val "bound" - call val "radius"
+            val "spp".vy = 0 - call val "spp".vy
+        ;
+        if call val "spp".y < 0 - call val "bound":
+            val "spp".y = 0 - call val "bound" + call val "radius"
+            val "spp".vy = 0 - call val "spp".vy
+        ;
+        val "spi" = call val "spi" + 1
+    ;
+    give 0
+;
+
+//nt: all-pairs AABB check
+//nt: swap only when approaching (equal-mass elastic)
+add fn "collide"() int:
+    add val "ci" int = 1
+    add val "cj" int = 1
+    add val "ca" Particle* = Particle(0.0, 0.0, 0.0, 0.0)
+    add val "cb" Particle* = Particle(0.0, 0.0, 0.0, 0.0)
+    add val "cdx" float = 0.0
+    add val "cdy" float = 0.0
+    add val "ct" float = 0.0
+    while call val "ci" <= len(call val "list"):
+        val "ca" = call val "list"[call val "ci"]
+        val "cj" = call val "ci" + 1
+        while call val "cj" <= len(call val "list"):
+            val "cb" = call val "list"[call val "cj"]
+            val "cdx" = call val "ca".x - call val "cb".x
+            val "cdy" = call val "ca".y - call val "cb".y
+            if call val "cdx" < call val "radius" + call val "radius":
+                if call val "cdx" > 0 - call val "radius" - call val "radius":
+                    if call val "cdy" < call val "radius" + call val "radius":
+                        if call val "cdy" > 0 - call val "radius" - call val "radius":
+                            if call val "cdx" < 0.0:
+                                if call val "ca".vx > call val "cb".vx:
+                                    val "ct" = call val "ca".vx
+                                    val "ca".vx = call val "cb".vx
+                                    val "cb".vx = call val "ct"
+                                    val "hits" = call val "hits" + 1
+                                ;
+                            ;
+                            if call val "cdx" > 0.0:
+                                if call val "ca".vx < call val "cb".vx:
+                                    val "ct" = call val "ca".vx
+                                    val "ca".vx = call val "cb".vx
+                                    val "cb".vx = call val "ct"
+                                    val "hits" = call val "hits" + 1
+                                ;
+                            ;
+                        ;
+                    ;
+                ;
+            ;
+            val "cj" = call val "cj" + 1
+        ;
+        val "ci" = call val "ci" + 1
+    ;
+    give 0
+;
+
+//nt: total vx momentum
+add fn "totalvx"() float:
+    add val "vh" float = 0.0
+    add val "vi" int = 1
+    add val "vp" Particle* = Particle(0.0, 0.0, 0.0, 0.0)
+    while call val "vi" <= len(call val "list"):
+        val "vp" = call val "list"[call val "vi"]
+        val "vh" = call val "vh" + call val "vp".vx
+        val "vi" = call val "vi" + 1
+    ;
+    give call val "vh"
+;
+
+//nt: containment check
+//nt: returns false on any out-of-bounds
+add fn "inbounds"() bool:
+    add val "wi" int = 1
+    add val "wp" Particle* = Particle(0.0, 0.0, 0.0, 0.0)
+    while call val "wi" <= len(call val "list"):
+        val "wp" = call val "list"[call val "wi"]
+        if call val "wp".x > call val "bound":
+            give fa
+        ;
+        if call val "wp".x < 0 - call val "bound":
+            give fa
+        ;
+        if call val "wp".y > call val "bound":
+            give fa
+        ;
+        if call val "wp".y < 0 - call val "bound":
+            give fa
+        ;
+        val "wi" = call val "wi" + 1
+    ;
+    give re
+;
+
+//nt: criterion 1 — exchange
+//nt: equal-mass elastic swaps velocities
+add fn "testexchange"() bool:
+    val "list" = []
+    add val "dp1" Particle* = call fn "spawn"(10.0, 0.0, 1.0, 0.0)
+    add val "dp2" Particle* = call fn "spawn"(11.5, 0.0, 0 - 1.0, 0.0)
+    add val "ds" int = 1
+    while call val "ds" <= 200:
+        call fn "step"(0.01)
+        call fn "collide"()
+        val "ds" = call val "ds" + 1
+    ;
+    if call val "dp1".vx < 0.0:
+        if call val "dp2".vx > 0.0:
+            give re
+        ;
+    ;
+    give fa
+;
+
+//nt: criterion 2 — momentum conservation
+add fn "testmomentum"() float:
+    val "list" = []
+    add val "mk" int = 0
+    add val "mv" float = 0.0
+    add val "mq" float = 0.0
+    add val "mh" float = 0.0
+    while call val "mk" < 20:
+        val "mv" = (call val "mk" % 2 == 0) ? 0.1 : 0 - 0.1
+        call fn "spawn"(3.0 + call val "mk" * 2.0, 0.0, call val "mv", 0.0)
+        val "mk" = call val "mk" + 1
+    ;
+    val "mq" = call fn "totalvx"()
+    add val "ms" int = 1
+    while call val "ms" <= 1500:
+        call fn "step"(0.01)
+        call fn "collide"()
+        val "ms" = call val "ms" + 1
+    ;
+    val "mh" = call fn "totalvx"()
+    give call val "mh" - call val "mq"
+;
+
+//nt: criterion 3 — wall bounce
+add fn "testwall"() bool:
+    val "list" = []
+    add val "kp" Particle* = call fn "spawn"(0.0, 0.0, 50.0, 0.0)
+    add val "ks" int = 1
+    while call val "ks" <= 300:
+        call fn "step"(0.01)
+        val "ks" = call val "ks" + 1
+    ;
+    if call val "kp".vx < 0.0:
+        give re
+    ;
+    give fa
+;
+
+//nt: benchmark 400 particles x 400 steps
+add fn "benchmark"() int:
+    val "list" = []
+    val "hits" = 0
+    add val "bk" int = 0
+    add val "bx" float = 0.0
+    add val "by" float = 0.0
+    add val "bvx" float = 0.0
+    add val "bvy" float = 0.0
+    while call val "bk" < 400:
+        val "bx" = 0.0 + call val "bk" * 0.25
+        val "by" = 0.0 + call val "bk" % 20 * 5.0
+        val "bvx" = 1.0 + call val "bk" % 3 * 1.0
+        val "bvy" = 0.5 + call val "bk" % 5 * 0.25
+        call fn "spawn"(call val "bx", call val "by", call val "bvx", call val "bvy")
+        val "bk" = call val "bk" + 1
+    ;
+    add val "bs" int = 1
+    while call val "bs" <= 400:
+        call fn "step"(0.01)
+        call fn "collide"()
+        val "bs" = call val "bs" + 1
+    ;
+    print("benchmark done, collisions:", call val "hits")
+    give 0
+;
+
+//nt: main flow
+add val "t1" bool = call fn "testexchange"()
+add val "t2" float = call fn "testmomentum"()
+add val "t3" bool = call fn "testwall"()
+add val "t4" bool = call fn "inbounds"()
+if call val "t1":
+    print("collision exchange: pass")
+;
+if call val "t1" == fa:
+    print("collision exchange: fail")
+;
+add val "dev" float = call val "t2"
+if call val "dev" < 0.0:
+    val "dev" = 0.0 - call val "dev"
+;
+if call val "dev" < 0.000001:
+    print("momentum conserved: pass")
+;
+if call val "dev" > 0.000001:
+    print("momentum conserved: fail, deviation", call val "dev")
+;
+if call val "t3":
+    print("wall bounce: pass")
+;
+if call val "t3" == fa:
+    print("wall bounce: fail")
+;
+if call val "t4":
+    print("containment: pass")
+;
+if call val "t4" == fa:
+    print("containment: fail")
+;
+call fn "benchmark"()
+#: main d
