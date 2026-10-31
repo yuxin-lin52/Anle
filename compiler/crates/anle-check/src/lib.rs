@@ -149,11 +149,11 @@ struct Ctx {
     suppressed: usize,
     //nt: 和类型变体名
     variants: BTreeSet<String>,
-    //nt: 开块行带 unsafe
+    //nt: 开块行带 `unsa
     unsafe_blocks: BTreeSet<String>,
-    //nt: add val 声明行
+    //nt: add val` 的
     val_decl_line: std::collections::HashMap<std::rc::Rc<str>, usize>,
-    //nt: add fn 声明行
+    //nt: add fn` 的声
     fn_decl_line: std::collections::HashMap<String, usize>,
     //nt: 跨模块 fn 签名
     fns_mod: BTreeMap<String, FnSig>,
@@ -165,7 +165,7 @@ struct Ctx {
     val_has_value: std::collections::HashSet<std::rc::Rc<str>>,
 }
 
-//nt: 只许出现在 unsafe 块
+//nt: 只许出现在 `uns
 const UNSAFE_ONLY: &[&str] = &[
     "read_8", "read_16", "read_32", "read_64", "write_8", "write_16", "write_32", "write_64",
     "str_to_c", "str_from_c",
@@ -241,7 +241,7 @@ fn split_type_list(s: &str) -> Vec<String> {
     out
 }
 
-//nt: add fn 或 add type
+//nt: add fn` 或
 fn is_add_fn(toks: &[Token]) -> bool {
     matches!(toks.first(), Some(Token::Kw("add")))
         && (matches!(toks.get(1), Some(Token::Kw("fn")))
@@ -381,12 +381,12 @@ pub fn check(ast: &AstProgram) -> CheckResult {
         val_has_value: std::collections::HashSet::new(),
     };
 
-    //nt: kill 语句检查
+    //nt: ★ `kill #
     //nt: ① 仅 unsafe
     for b in &ast.blocks {
         cx.cur_file = b.file.clone();
         let is_unsafe_blk = b.attrs.iter().any(|a| a == "unsafe");
-        //nt: 收集本块内 call
+        //nt: 收集本块内 `cal
         //nt: 「被本链调用过」判定
         let mut called_in_block: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
         for st3 in &b.stmts {
@@ -581,9 +581,9 @@ pub fn check(ast: &AstProgram) -> CheckResult {
         }
     }
 
-    //nt: d kill 后缀检查
+    //nt: ★ `d kill
     //nt: ① 该块也必须是危险
-    //nt: ② 开块行写法
+    //nt: ② 开块行写 `b
     for b in &ast.blocks {
         cx.cur_file = b.file.clone();
         let has_kill = b.attrs.iter().any(|a| a == "kill");
@@ -800,7 +800,7 @@ fn 登记头部(toks: &TokStream, 处: 位置, 块: &str, out: &mut Vec<SymbolIn
 }
 
 
-//nt: 块是否带 unsafe
+//nt: 块是否带 `unsa
 fn block_is_unsafe(block: &AstBlock, ast: &AstProgram) -> bool {
     //nt: 块行属性在语法层已消
     //nt: 这里以「块名 + 属
@@ -893,7 +893,7 @@ fn fn_scope_block(b: &AstBlock, fname: &str, body: &[AstStmt]) -> AstBlock {
     }
 }
 
-//nt: 伪块名还原
+//nt: 伪块名 `块#函数
 fn 原块(block: &str) -> &str {
     block.split('#').next().unwrap_or(block)
 }
@@ -1020,7 +1020,7 @@ fn collect_stmts(stmts: &[AstStmt], b: &AstBlock, cx: &mut Ctx) {
     }
 }
 
-//nt: 登记 add val
+//nt: 登记一个 `add
 fn collect_val(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
     let line = 处.行;
     let name = match toks.get(2) {
@@ -1054,7 +1054,7 @@ fn collect_val(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
         if head == "map" {
             if let Some(inner) = ty.strip_prefix("map(").and_then(|x| x.strip_suffix(')')) {
                 let k = inner.split(',').next().unwrap_or("").trim();
-//nt: 键不能是把手
+//nt: 键也不能是把手 `X
                 if is_container_ty(k) {
                     bad = Some(format!("键是容器 {}", k));
                 } else if k.ends_with('*') {
@@ -1159,7 +1159,7 @@ fn iter_elem_ty(head: &[Token], locals: &[LocalInfo], idx: &std::collections::Ha
     {
         return "str".into();
     }
-    //nt: 显式取值形态
+    //nt: 显式取值形态 `va
     if let [Token::Kw("val"), rest @ (Token::Str(_) | Token::Ident(_))] = src {
         let n = match rest {
             Token::Str(n) | Token::Ident(n) => n,
@@ -1219,7 +1219,7 @@ fn is_add_fix(toks: &[Token]) -> bool {
 }
 
 
-//nt: 预扫全程序类型声明
+//nt: 预扫全程序的 `ad
 fn scan_types(ast: &AstProgram) -> TypeTable {
     let mut out: TypeTable = BTreeMap::new();
     for b in &ast.blocks {
@@ -1541,7 +1541,7 @@ fn scan_variants(ast: &AstProgram) -> BTreeSet<String> {
     out
 }
 
-//nt: 登记 case 绑定
+//nt: 登记 `case 变
 fn collect_case_bindings(b: &AstBlock, head: &[Token], cx: &mut Ctx) {
     if !matches!(head.first(), Some(Token::Kw("case")))
         || !matches!(head.get(2), Some(Token::Sym("(")))
@@ -1699,7 +1699,7 @@ fn check_type_cycles(types: &TypeTable, cx: &mut Ctx) {
     }
 }
 
-//nt: 从起点查可达
+//nt: 从 `start
 fn reaches_self(types: &TypeTable, start: &str) -> bool {
     let mut seen: BTreeSet<String> = BTreeSet::new();
     let mut stack: Vec<String> = Vec::new();
@@ -1729,7 +1729,7 @@ fn reaches_self(types: &TypeTable, start: &str) -> bool {
 }
 
 
-//nt: 登记 add fn
+//nt: 登记 `add fn
 fn collect_fn(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
     let _line = 处.行;
     //nt: add hide f
@@ -1737,7 +1737,7 @@ fn collect_fn(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
     register_fn(b, 处, toks, name_at, false, false, cx);
 }
 
-//nt: 登记 fn 重绑定行
+//nt: 登记 `fn "名"
 fn collect_rebind_fn(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
     let _line = 处.行;
     register_fn(b, 处, toks, 1, false, true, cx);
@@ -1850,7 +1850,7 @@ fn check_hide_decls(ast: &AstProgram, cx: &mut Ctx) {
     }
 }
 
-//nt: 登记 add outs fn
+//nt: 登记 `add ou
 fn collect_outs_fn(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
     let _line = 处.行;
     register_fn(b, 处, toks, 3, true, false, cx);
@@ -2610,7 +2610,7 @@ fn collect_bare_ok_names(stmts: &[AstStmt], out: &mut BTreeSet<String>) {
 
 //nt: match 对象的类
 //nt: 推断来源
-//nt: params 匹配
+//nt: params` =
 fn match_object_ty(
     b: &AstBlock,
     obj: &[Token],
@@ -2629,7 +2629,7 @@ fn match_object_ty(
     } else {
         obj
     };
-    //nt: ① 显式取值
+    //nt: ① 显式取值 `va
     if let [Token::Kw("val"), rest @ (Token::Str(_) | Token::Ident(_))] = obj {
         let n = match rest {
             Token::Str(n) | Token::Ident(n) => n,
@@ -2655,7 +2655,7 @@ fn match_object_ty(
             }
         };
     }
-    //nt: ② 显式调用
+    //nt: ② 显式调用 `ca
     if let [Token::Kw("call"), Token::Kw("fn"), rest @ (Token::Str(_) | Token::Ident(_)), Token::Sym("("), ..] = obj {
         let n = match rest {
             Token::Str(n) | Token::Ident(n) => n,
@@ -2667,7 +2667,7 @@ fn match_object_ty(
         }
         return None; // fn 没建过——pass2_calls 已报，这里不重复
     }
-    //nt: ③ 变体构造
+    //nt: ③ 变体构造 `名
     if let [Token::Ident(n), Token::Sym("("), ..] = obj {
         if let Some(owner) = var_owner.get(n) {
             return Some(owner.clone());
@@ -2837,7 +2837,7 @@ fn check_expr_matches_block(
 }
 
 //nt: 在表达式 token
-//nt: 语句形态 match
+//nt: 语句形态 `matc
 fn scan_expr_matches(
     b: &AstBlock,
     处: 位置,
@@ -3473,7 +3473,7 @@ fn calls_expr(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
     scan_bare_reads(b, 处, expr, toks, cx);
 }
 
-//nt: 顶层赋值位置
+//nt: 顶层 `=
 fn top_assign_pos(toks: &[Token]) -> Option<usize> {
     let mut depth = 0i32;
     for (k, t) in toks.iter().enumerate() {
@@ -3527,7 +3527,7 @@ fn parse_qualified_call(expr: &[Token], i: usize) -> Option<(Option<String>, Str
         _ => return None,
     };
     j += 1;
-    //nt: 只核对 fn 形态
+    //nt: 只核对 `fn "名
     if !matches!(expr.get(j), Some(Token::Kw("fn"))) {
         return None;
     }
@@ -3592,7 +3592,7 @@ fn scan_bare_reads(b: &AstBlock, 处: 位置, expr: &[Token], full: &[Token], cx
         }
         k += 1;
     }
-    //nt: 裸重绑定
+    //nt: 裸重绑定 `名 =
     if let (Some(Token::Ident(n)), Some(Token::Sym("="))) = (expr.first(), expr.get(1)) {
         if cx.local_idx.contains_key(format!("{}|{}", b.name, n).as_str()) {
             cx.err(
@@ -3611,7 +3611,7 @@ fn scan_bare_reads(b: &AstBlock, 处: 位置, expr: &[Token], full: &[Token], cx
             return;
         }
     }
-    //nt: val 读
+    //nt: val "名"` 读
     let mut vi = 0usize;
     while vi + 1 < expr.len() {
         if matches!(expr[vi], Token::Kw("val")) {
@@ -3844,7 +3844,7 @@ fn uses_line(b: &AstBlock, 处: 位置, toks: &[Token], cx: &mut Ctx) {
     }
     if is_add_val(toks) {
         //nt: 声明句
-        //nt: 名字在参数里
+        //nt: ⚠️ 名字在 `pa
         //nt: add val "x
         if let Some(eq) = toks.iter().position(|t| *t == Token::Sym("=")) {
             let decl_name = match toks.get(2) {
@@ -3950,7 +3950,7 @@ fn require_known(b: &AstBlock, 处: 位置, name: &str, cx: &mut Ctx) {
     });
 }
 
-//nt: 摘掉 asm 区
+//nt: 把 `asm
 fn 摘掉asm区(toks: &[Token]) -> Vec<Token> {
     let mut 出 = Vec::with_capacity(toks.len());
     let mut i = 0usize;
@@ -4107,7 +4107,7 @@ fn ty_compatible(decl: &str, got: &str) -> bool {
     if decl == got {
         return true;
     }
-//nt: null 只配引用
+//nt: null` 只配引用
     if got == "null" {
         return decl.ends_with('*');
     }
@@ -4367,7 +4367,7 @@ fn infer(
         }
     }
     //nt: 同块取 val
-    //nt: 不做这一步
+    //nt: 不做这一步，`"名"
     if let [Token::Kw("call"), Token::Kw("val"), Token::Str(n)] = toks {
         if let Some(l) = idx.get(format!("{}|{}", block, n).as_str()).map(|&i| &locals[i]) {
             return Some(
@@ -4433,7 +4433,7 @@ fn infer(
         }
     }
     //nt: 列表 / map 字
-    //nt: 下标读
+    //nt: 下标读 `表[i]
     if matches!(toks.first(), Some(Token::Sym("["))) {
         return Some("list".to_string());
     }

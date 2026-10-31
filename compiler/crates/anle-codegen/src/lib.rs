@@ -2109,7 +2109,7 @@ fn stmt_c(
                             }
                         }
                         "bool" => format!("(({}) != 0)", arg(0)),
-                        // nt: 定长族转换
+                        // nt: 定长族转换 `int
                         "int_8" | "uint_8" | "int_16" | "uint_16" | "int_32" | "uint_32"
                         | "int_64" | "uint_64" => {
                             format!("(({})({}))", c_ty_in(&Ty(name.clone()), types), arg(0))
@@ -2269,7 +2269,7 @@ fn stmt_c(
                 }
                 Rvalue::MapGet { map, key } => {
                     // nt: map 的值槽是 8
-                    // nt: 值类型取 map 值型
+                    // nt: 值类型 = `map
                     let vt = match map {
                         Value::Local(id) => f
                             .locals
@@ -2892,23 +2892,14 @@ fn mark_runtime(name: &str, used: &mut BTreeSet<&'static str>) {
 // nt: lower
 
 // nt: 运行期护栏统一出口
-const ANLE_ARENA_RT: &str = r#"/* ===== 确定性内存管理：段树 + 段池（2026-10-17 新做，不抄旧实现）=====
-
- * 段级池：按段分配与回收，段与段互不干扰
-
- * 要点：每块实例一段（树）；段内 bump 分配 O(1)；段池按 64KB 统一档 O(1) 借还。
-
- * 分配策略：不做字节级 best-fit freelist（O(n) 热路径），
-
- * 复用走**段级**池；不设静默上限（池满/池空明确报错）。
-
- * 现阶段：只落实现，暂不接线（所有分配仍走 libc malloc）。
-
+const ANLE_ARENA_RT: &str = r#"/* ===== 确定性内存管理：区域树 + 段 =====
+ * 每块一个区域节点；区域内按段分配：段内 bump O(1)，段满再向 libc 要新段。
+ * 出块即整棵子树还给 libc；圈尾由 scope_release 批量归还。
+ * 不保留跨区域的段复用：段的生命周期只跟随所属区域，
+ * 使内存峰值与地址布局不受此前分配历史影响。
  */
 
 #define ANLE_SEG_BLK 65536u
-
-#define ANLE_SEG_POOL_MAX 65536
 
 #define ANLE_SEG_ERR_SZ 7
 
@@ -2940,12 +2931,6 @@ typedef struct AnleRegion {
 
 } AnleRegion;
 
-
-
-static AnleSegBlock* anle_seg_pool = NULL;
-
-long long anle_seg_pool_n = 0;
-
 long long anle_seg_live = 0;
 static AnleRegion* anle_region_cur = NULL;
 
@@ -2971,44 +2956,19 @@ static AnleRegion* anle_region_node(void) {
 
 
 static AnleSegBlock* anle_seg_take(void) {
-
-    AnleSegBlock* b;
-
-    if (anle_seg_pool) {
-
-        b = anle_seg_pool; anle_seg_pool = b->next; anle_seg_pool_n--; b->next = NULL;
-
-        return b;
-
-    }
-
-    b = (AnleSegBlock*)malloc(sizeof(AnleSegBlock));
-
+    AnleSegBlock* b = (AnleSegBlock*)malloc(sizeof(AnleSegBlock));
     if (!b) return NULL;
-
     b->base = (char*)malloc(ANLE_SEG_BLK);
-
     if (!b->base) { free(b); return NULL; }
-
     b->cap = ANLE_SEG_BLK; b->next = NULL;
-
     return b;
-
 }
 
 
 
 void anle_seg_give(AnleSegBlock* b) {
-
     if (!b) return;
-
-    /* oversized 块回池会占着大内存 ⇒ 直接还给 libc */
-    if (b->cap != ANLE_SEG_BLK) { free(b->base); free(b); return; }
-
-    if (anle_seg_pool_n >= ANLE_SEG_POOL_MAX) { free(b->base); free(b); return; }
-
-    b->next = anle_seg_pool; anle_seg_pool = b; anle_seg_pool_n++;
-
+    free(b->base); free(b);
 }
 
 

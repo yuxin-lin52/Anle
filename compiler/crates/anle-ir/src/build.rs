@@ -689,7 +689,7 @@ fn builtin_ret_ty(name: &str) -> Ty {
     match name {
         "concat" | "sub_str" | "nth_char" | "char" | "str" | "read_file" => Ty("str".into()),
         "float" => Ty("float".into()),
-        //nt: 类型转换
+        //nt: 类型转换 `bool
         "bool" => Ty("bool".into()),
 //nt: 运行子程序
         "run" => Ty("int".into()),
@@ -700,7 +700,7 @@ fn builtin_ret_ty(name: &str) -> Ty {
         //nt: 取环境 / 表内容
         "args" | "keys" => Ty("list(str)".into()),
         "vals" => Ty("list(int)".into()),
-        //nt: 定长族转换
+        //nt: 定长族转换 `int
         "int_8" | "int_16" | "int_32" | "int_64" | "uint_8" | "uint_16" | "uint_32" | "uint_64" => {
             Ty(name.to_string())
         }
@@ -709,7 +709,7 @@ fn builtin_ret_ty(name: &str) -> Ty {
     }
 }
 
-//nt: 判断 ## 形态
+//nt: 判断 `##
 fn hh_is_fn_form(t: &[Token], start: usize) -> bool {
     let mut j = start;
     loop {
@@ -850,7 +850,7 @@ fn container_ty_at_raw(toks: &[Token], i: usize) -> Option<String> {
 }
 
 //nt: 块内公式函数的签名
-//nt: params 与字段
+//nt: params` /
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 struct FnSig {
@@ -893,7 +893,7 @@ struct Builder {
     fns: BTreeMap<String, FnSig>,
     //nt: 全程序的公式函数
     global_fns: std::rc::Rc<BTreeMap<String, FnSig>>,
-    //nt: 全程序跨块取值
+    //nt: 全程序里「被 `ca
     //nt: 这些 val 的存储
     cross_vals: std::rc::Rc<BTreeMap<String, BTreeMap<String, Ty>>>,
     //nt: 本块里作**指针参数
@@ -910,9 +910,9 @@ struct Builder {
     //nt: 下接
 //nt: 标了 `pub` 的
     pub_blocks: std::rc::Rc<BTreeSet<String>>,
-    //nt: 被 hide 的条目
+    //nt: 被 `add hid
     hidden_items: std::rc::Rc<BTreeSet<String>>,
-    //nt: 每块类型表
+    //nt: 每块 `add ty
     block_types: std::rc::Rc<BTreeMap<String, BTreeSet<String>>>,
     sum_variants: std::rc::Rc<BTreeMap<String, (String, usize, Vec<Ty>)>>,
     //nt: 当前右值的期望类型
@@ -1371,7 +1371,7 @@ impl Builder {
     }
 
 
-    //nt: if 头折成常量
+    //nt: if` 头折成布尔常
     fn 条件常量(&self, head: &[Token]) -> Option<bool> {
         let 体: Vec<Token> = head.iter().filter(|t| **t != Token::Sym(":")).cloned().collect();
         let 条 = match 体.first() {
@@ -1819,12 +1819,12 @@ impl Builder {
                 *i += 1;
                 Ok(Value::Str(s.clone()))
             }
-//nt: 原样串
+//nt: 原样串 `@"…"
             Some(Token::RawStr(s)) => {
                 *i += 1;
                 Ok(Value::Str(s.clone()))
             }
-//nt: 逻辑非
+//nt: 逻辑非 `not x
             //nt: 最简实现
             Some(Token::Kw("not")) => {
                 *i += 1;
@@ -2567,7 +2567,7 @@ impl Builder {
                 self.emit(Stmt::Assign { lhs: Place::local(tmp), rhs: Rvalue::Call { name, args: vals } });
                 Ok(Value::Local(tmp))
             }
-            //nt: map 字面量
+            //nt: map 字面量 `{
             Some(Token::Sym("{")) => {
                 let mut depth = 0i32;
                 let mut end = None;
@@ -2608,7 +2608,7 @@ impl Builder {
                 });
                 Ok(Value::Local(tmp))
             }
-            //nt: 列表字面量
+            //nt: 列表字面量 `[a
             Some(Token::Sym("[")) => {
                 let start = *i;
                 let mut depth = 0i32;
@@ -2670,7 +2670,7 @@ impl Builder {
                         }
                     }
                 };
-                //nt: 字段投影
+                //nt: .字段` 投影
                 let vty = self
                     .f
                     .locals
@@ -2837,7 +2837,7 @@ impl Builder {
                         });
                         return Ok(Value::Local(st));
                     }
-                    //nt: 切片
+                    //nt: 切片 `名[a~b]
                     //nt: 队列/栈只进只出
                     let slice_base_filo = self
                         .f
@@ -2883,7 +2883,7 @@ impl Builder {
                         lhs: Place::local(tmp),
                         rhs: Rvalue::ListGet { list: Value::Local(base), index: idx },
                     });
-                    //nt: 下标读后接字段
+                    //nt: 下标读之后若接 `.
                     if matches!(t.get(*i), Some(Token::Sym("."))) {
                         return self.field_chain(tmp, ety, t, i);
                     }
@@ -3072,7 +3072,7 @@ impl Builder {
                         return Ok(Value::Local(tmp));
                     }
                     //nt: 内置函数调用
-                    //nt: 内置名不经 call
+                    //nt: 内置名不经 `cal
                     if matches!(t.get(*i + 1), Some(Token::Sym("("))) {
                         *i += 2;
                         let mut depth = 1i32;
@@ -4288,7 +4288,7 @@ impl Builder {
             Some(Token::Ident(n)) | Some(Token::Str(n)) => n.clone(),
             _ => return err("for 后应是循环变量"),
         };
-        //nt: 列表表达式
+        //nt: 列表表达式 = `i
         let lst_toks: Vec<Token> = head[3..head.len() - 1].to_vec();
         let lst = self.expr(&lst_toks)?;
         let lid = match lst {
@@ -4625,7 +4625,7 @@ impl Builder {
     }
 
     //nt: 表达式形态 matc
-    //nt: 语句形态 match
+    //nt: 语句形态走 `mat
     fn match_expr(&mut self, t: &[Token], i: &mut usize) -> Result<Value, BuildError> {
         *i += 1; // 跳过 `match`
         //nt: 对象字面量
@@ -4865,7 +4865,7 @@ impl Builder {
         ret: Ty,
         body: &[AstStmt],
     ) -> Result<Function, BuildError> {
-        //nt: 末尾必须是 give
+        //nt: 末尾必须是 `giv
         let (last, init) = body.split_last().ok_or_else(|| BuildError {
             message: "语句体 fn 是空的——最后要写 `give 表达式`".into(),
             code: "E301".into(),
@@ -5469,12 +5469,12 @@ fn parse_field_list(toks: &[Token]) -> Result<Vec<(String, Ty)>, BuildError> {
 }
 
 //nt: 解析变体字段
-//nt: 无名者按序号
+//nt: 无名者按序号记 `#
 fn parse_variant_fields(toks: &[Token]) -> Result<Vec<(String, Ty)>, BuildError> {
     let end = matching_close(toks)?;
     let mut fields = Vec::new();
     for (idx, a) in split_args(&toks[..end]).into_iter().enumerate() {
-        //nt: 具名字段
+        //nt: 具名字段 `名 类型
         let (fname, fty_tok) = if a.len() >= 2 && !matches!(a.get(1), Some(Token::Sym("*"))) {
             match a.first() {
                 Some(Token::Ident(n)) | Some(Token::Str(n)) => (n.clone(), a.get(1)),
@@ -5968,7 +5968,7 @@ pub fn build(ast: &AstProgram) -> Result<Program, BuildError> {
     }
 
     //nt: 预扫值类型
-    //nt: 先收全程序 val
+    //nt: 先收全程序 `add
     let mut val_tys: BTreeMap<String, Ty> = BTreeMap::new();
     for b in &ast.blocks {
         let mut flat_lines: Vec<&TokStream> = Vec::new();
@@ -6376,7 +6376,7 @@ pub fn build(ast: &AstProgram) -> Result<Program, BuildError> {
         let (mut main, extra, ex) =
             build_block(b, &types, &type_idx, &global_fns, &cross_vals, &sum_variants, &mod_by_tail, &pub_blocks, &hidden_items, &block_types)?;
         //nt: 块函数 IR 名用
-        //nt: 与 call 块前缀
+        //nt: 与 `call #
         main.name = format!("{}|{}", b.module, b.name);
         functions.push(main);
         functions.extend(extra);

@@ -89,11 +89,11 @@ pub enum Rvalue {
     FnRef { name: String },
     //nt: 间接调用
     CallIndirect { callee: Value, args: Vec<Value> },
-    //nt: 列表字面量
+    //nt: 列表字面量 `[1
     ListLit { elems: Vec<Value> },
-    //nt: 下标读
+    //nt: 下标读 `列表[i]
     ListGet { list: Value, index: Value },
-    //nt: map 字面量
+    //nt: map 字面量 `{
     //nt: 键收str与int
     MapLit { pairs: Vec<(MapKey, Value)> },
     //nt: map 按键读
@@ -104,7 +104,7 @@ pub enum Rvalue {
     VariantTag(Value),
     //nt: 和类型解构
     VariantGet { value: Value, idx: usize, ty: Ty },
-    //nt: 取地址
+    //nt: 取地址 `&位置
     Ref(Place),
 }
 
@@ -177,7 +177,7 @@ pub enum Stmt {
     Call { name: String, args: Vec<Value> },
     Live(Place),
     Dead(Place),
-    //nt: 下标写
+    //nt: 下标写 `列表[i]
     ListSet { list: Value, index: Value, value: Value },
     //nt: map 按键写
     MapSet { map: Value, key: Value, value: Value },
@@ -210,7 +210,7 @@ pub struct Block {
     //nt: 块参数
     pub params: Vec<(LocalId, Ty)>,
     pub stmts: Vec<Stmt>,
-    //nt: 与语句表
+    //nt: 与 `stmts
     pub spans: Vec<Span>,
     pub exit: Exit,
 }
@@ -245,15 +245,15 @@ pub struct Function {
     pub blocks: Vec<Block>,
     //nt: 是否**代码块**函
     pub is_block: bool,
-    //nt: 块行属性 pub
+    //nt: 块行属性 `pub
     pub is_pub: bool,
-    //nt: 块行属性 sle
+    //nt: 块行属性 `sle
     pub is_sle: bool,
-    //nt: 关块行后缀
+    //nt: 关块行后缀 `d k
     pub kills_own: bool,
-    //nt: 块行属性 ABI
+    //nt: 块行属性 `ABI
     pub is_abi: bool,
-    //nt: 块行属性 asm
+    //nt: 块行属性 `asm
     pub is_naked: bool,
     //nt: naked 函数的汇
     pub asm_lines: Vec<String>,

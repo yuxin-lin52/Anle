@@ -16,7 +16,7 @@ Every language must answer one question: who is responsible for memory? Manual m
 
 Anle takes none of these trade-offs. The program is structured as blocks; values live in the block that declares them; all data crossing a block boundary goes through an explicit channel. Given that structure, the compiler computes the lifetime and reclamation point of every value. The programmer writes blocks and states data flow; the compiler does the rest.
 
-The same division runs through the whole language. The syntax is small and regular. Direct memory access and explicit early reclamation (`kill`) exist only inside `unsafe` blocks. There is no manual memory allocation. The intent is that the compiler emits code where memory is managed directly by the target; implementing that turned out to be difficult, so the current version embeds a runtime allocator in the generated code. That is a known deviation, to be repaired. Anle also provides inline assembly and C ABI interoperability for environments that need their own.
+The same division runs through the whole language. The syntax is small and regular. Direct memory access and explicit early reclamation (`kill`) exist only inside `unsafe` blocks. There is no manual memory allocation. The compiler computes where memory is released from the block structure: each block runs in its own region, and when the block's chain finishes, its segments are handed back to the platform allocator in one step. Anle also provides inline assembly and C ABI interoperability for environments that need their own.
 
 ## Language overview
 
