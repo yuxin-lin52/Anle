@@ -1,6 +1,8 @@
-# Anle
+<p align="center"><img src="assets/icon.png" width="112" height="112" alt="Anle"></p>
 
-[中文](README.zh-CN.md) | English
+<h1 align="center">Anle</h1>
+
+<p align="center">[中文](README.zh-CN.md) | English</p>
 
 Anle is an ahead-of-time compiled language. Memory is managed by the compiler: reclamation points are computed from the program's block structure, and the runtime has no garbage collector, no pauses, and no per-object counting.
 
