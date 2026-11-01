@@ -27,6 +27,7 @@ case Err("reason"):
 - Propagation has no sugar: call, unpack, continue. The verbose parts can be factored into fns.
 - **Error codes**: compile-time diagnostics use `E0–E4` by stage (lexical / syntax / check / IR / backend) and `E5–E9` by ownership (project config / environment / compiler internals / reserved / fallback). The single rule: **if fixing your own source can remove the error, it is E0–E4; otherwise E5–E9**. Runtime guards use **R codes** (R01 dangling handle, R02 division by zero, R03 overflow, R04 out of bounds, R05 missing key, R06 out of memory).
 - Diagnostics carry four parts: location (file, line, column), the action, the error, and **how to fix it**. Severity has four levels aligned with LSP.
+- **Guards follow the build mode**: in debug (the default), container-access checks are all active — index out of range (R04), missing key (R05). Under `--mode release` these checks are removed from the artifact: not skipped, absent, at no runtime cost. In release an out-of-range access is undefined behavior; the two modes produce identical output for any program that stays in bounds.
 
 ## Why
 
