@@ -1,0 +1,10 @@
+[package]
+name = "anle-check"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anle-error = { path = "../anle-error" }
+anle-lexer = { path = "../anle-lexer" }
+anle-parser = { path = "../anle-parser" }
+anle-types = { path = "../anle-types" }

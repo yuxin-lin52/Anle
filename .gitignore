@@ -1,0 +1,14 @@
+# 构建产物
+build/
+target/
+*.exe
+*.pdb
+*.ilk
+*.o
+*.obj
+*.c.tmp
+
+# 调试与链接中间产物
+*.exp
+*.lib
+*-report.txt

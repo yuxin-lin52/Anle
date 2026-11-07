@@ -1,0 +1,54 @@
+name: Bug report
+description: Something compiles wrong, crashes, or does not match the documentation
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Paste text rather than screenshots — it can be searched, quoted, and copied. 中文提问同样欢迎。
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `anlec --version`
+      placeholder: compiler=0.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options:
+        - C
+        - LLVM
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest program that shows the problem, plus the exact command you ran
+      render: anle
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: What the program or the compiler should have done
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+      description: The output you got, or the diagnostic code (E201, R04, ...)
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, and the C toolchain in use (`clang --version`)
+    validations:
+      required: false

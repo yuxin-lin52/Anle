@@ -1,0 +1,9 @@
+[package]
+name = "anle-llvm"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anle-ir = { path = "../anle-ir" }
+anle-walk = { path = "../anle-walk" }
+inkwell = { version = "0.11", default-features = false, features = ["llvm22-1-prefer-static", "target-x86", "target-aarch64"] }

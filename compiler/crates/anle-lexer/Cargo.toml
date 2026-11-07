@@ -1,0 +1,7 @@
+[package]
+name = "anle-lexer"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anle-error = { path = "../anle-error" }

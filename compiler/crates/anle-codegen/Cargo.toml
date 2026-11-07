@@ -1,0 +1,9 @@
+[package]
+name = "anle-codegen"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anle-error = { path = "../anle-error" }
+anle-ir = { path = "../anle-ir" }
+anle-walk = { path = "../anle-walk" }
